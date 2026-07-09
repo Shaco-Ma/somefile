@@ -1,20 +1,16 @@
 #ifndef INCLUDED_RINGBUF_H
 #define INCLUDED_RINGBUF_H
 
-
-
 #include <stddef.h>
 #include <sys/types.h>
 #include <stdint.h>
 
-
 struct ringbuf
 {
-    uint8_t *buf;
-    uint8_t *head, *tail;
-    size_t size;
+	uint8_t *buf;
+	uint8_t *head, *tail;
+	size_t size;
 };
-
 
 typedef struct ringbuf * ringbuf_t;
 

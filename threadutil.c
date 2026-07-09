@@ -4,35 +4,34 @@
  */
 #include <errno.h>
 #include "threadutil.h"
-#include "log.h"
 
 #define   TAG       "threadUtil"
 
 //  初始化线程条件变量,pCheckCondition 表示条件函数，
-int ThreadUtil_initCondition(ThreadUtilCondition_t * pCondition , u8  (*pCheckCondition)())
+int ThreadUtil_initCondition(ThreadUtilCondition_t * pCondition , uint8_t  (*pCheckCondition)())
 {
-    pthread_condattr_t cattr;
-    pthread_condattr_init(&cattr);
-    pthread_condattr_setclock(&cattr, CLOCK_MONOTONIC);
-    int ret = pthread_cond_init(&pCondition->condition, &cattr);
-    pthread_condattr_destroy(&cattr);
+	pthread_condattr_t cattr;
+	pthread_condattr_init(&cattr);
+	pthread_condattr_setclock(&cattr, CLOCK_MONOTONIC);
+	int ret = pthread_cond_init(&pCondition->condition, &cattr);
+	pthread_condattr_destroy(&cattr);
 
-    if(ret != 0)
-    {
-        LOGW(TAG ,"pthread_cond_init failed:%d\n",ret);
-        return ret;
-    }
-    ret = pthread_mutex_init(&(pCondition->lock) , NULL);
-    if(ret != 0)
-    {
-        LOGW(TAG ,"pthread_mutex_init failed:%d\n",ret);
-        return ret;
-    }
+	if(ret != 0)
+	{
+		LOGW(TAG ,"pthread_cond_init failed:%d\n",ret);
+		return ret;
+	}
+	ret = pthread_mutex_init(&(pCondition->lock) , NULL);
+	if(ret != 0)
+	{
+		LOGW(TAG ,"pthread_mutex_init failed:%d\n",ret);
+		return ret;
+	}
 
-    pCondition->conditionVal = 0;
-    pCondition->pCheckCondition = pCheckCondition;
+	pCondition->conditionVal = 0;
+	pCondition->pCheckCondition = pCheckCondition;
 
-    return ret;
+	return ret;
 }
 
 #define     THREADUTIL_SLEEP_TIME           50
@@ -41,39 +40,39 @@ int ThreadUtil_initCondition(ThreadUtilCondition_t * pCondition , u8  (*pCheckCo
 //  若条件变量为真，返回非0, 否则返回0
 int ThreadUtil_waitCondition(ThreadUtilCondition_t * pCondition, int timeout)
 {
-    u8 condition = 0;
+	uint8_t condition = 0;
 
-    pthread_mutex_lock(&pCondition->lock);
+	pthread_mutex_lock(&pCondition->lock);
 
-    if(pCondition->conditionVal)
-    {
-        //condition = 1;
-    }
-    else if(timeout > 0)
-    {
-        struct timespec ts;
-        int ret = 0;
-        clock_gettime(CLOCK_MONOTONIC, &ts);
-        ts.tv_sec = ts.tv_sec + (timeout / 1000L);
-        ts.tv_nsec = ts.tv_nsec + (timeout % 1000L) * 1000000L;
-        ts.tv_sec += ts.tv_nsec / 1000000000L;
-        ts.tv_nsec %= 1000000000L;
+	if(pCondition->conditionVal)
+	{
+		//condition = 1;
+	}
+	else if(timeout > 0)
+	{
+		struct timespec ts;
+		int ret = 0;
+		clock_gettime(CLOCK_MONOTONIC, &ts);
+		ts.tv_sec = ts.tv_sec + (timeout / 1000L);
+		ts.tv_nsec = ts.tv_nsec + (timeout % 1000L) * 1000000L;
+		ts.tv_sec += ts.tv_nsec / 1000000000L;
+		ts.tv_nsec %= 1000000000L;
 
-        while(!pCondition->conditionVal)
-        {
-            ret = pthread_cond_timedwait(&pCondition->condition, &pCondition->lock, &ts);
-            if (ret == ETIMEDOUT)
-            {
-                break;
-            }
-        }
-    }
+		while(!pCondition->conditionVal)
+		{
+			ret = pthread_cond_timedwait(&pCondition->condition, &pCondition->lock, &ts);
+			if (ret == ETIMEDOUT)
+			{
+				break;
+			}
+		}
+	}
 
-    condition = pCondition->conditionVal;
+	condition = pCondition->conditionVal;
 
-    pthread_mutex_unlock(&pCondition->lock);
+	pthread_mutex_unlock(&pCondition->lock);
 
-    return  condition;
+	return  condition;
 }
 
 void ThreadUtil_startCheckCondition(ThreadUtilCondition_t * pCondition)
@@ -82,20 +81,20 @@ void ThreadUtil_startCheckCondition(ThreadUtilCondition_t * pCondition)
 
 void ThreadUtil_endCheckCondition(ThreadUtilCondition_t * pCondition)
 {
-    pthread_mutex_lock(&pCondition->lock);
+	pthread_mutex_lock(&pCondition->lock);
 
-    //如果条件满足，广播一下
-    u8 condition = pCondition->pCheckCondition();
-    //LOGV(TAG, "condition=%u\n",condition);
+	//如果条件满足，广播一下
+	uint8_t condition = pCondition->pCheckCondition();
+	//LOGV(TAG, "condition=%u\n",condition);
 
-    pCondition->conditionVal = condition;
+	pCondition->conditionVal = condition;
 
-    if(pCondition->conditionVal)
-    {
-        pthread_cond_broadcast(&pCondition->condition);
-    }
+	if(pCondition->conditionVal)
+	{
+		pthread_cond_broadcast(&pCondition->condition);
+	}
 
-    pthread_mutex_unlock(&pCondition->lock);
+	pthread_mutex_unlock(&pCondition->lock);
 }
 
 void ThreadUtil_DeinitCheckCondition(ThreadUtilCondition_t * pCondition)

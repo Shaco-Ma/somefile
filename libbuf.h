@@ -14,9 +14,7 @@
 #define _BUFFER_MANAGER_H_
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__BEGIN_DECLS
 typedef struct libBuf_context *libBuf_context_t;
 
 libBuf_context_t libBuf_init(uint16_t size) ;
@@ -36,8 +34,6 @@ int libBuf_getFreeSize(libBuf_context_t libBufCtx) ; //不阻塞 ，立刻返回
 void libBuf_reset(libBuf_context_t libBufCtx) ;
 int libBuf_free(libBuf_context_t libBufCtx);
 
+__END_DECLS
 
-#ifdef __cplusplus
-};
-#endif
 #endif
